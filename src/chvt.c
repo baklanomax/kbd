@@ -18,40 +18,19 @@
 
 #include "libcommon.h"
 
-static void __attribute__((noreturn))
+static void KBD_ATTR_NORETURN
 usage(int rc, const struct kbd_help *options)
 {
-	const struct kbd_help *h;
-	fprintf(stderr, _("Usage: %s [option...] N\n"), get_progname());
-	if (options) {
-		int max = 0;
+	fprintf(stderr, _("Usage: %s [option...] N\n"), program_invocation_short_name);
 
-		fprintf(stderr, "\n");
-		fprintf(stderr, _("Options:"));
-		fprintf(stderr, "\n");
-
-		for (h = options; h && h->opts; h++) {
-			int len = (int) strlen(h->opts);
-			if (max < len)
-				max = len;
-		}
-		max += 2;
-
-		for (h = options; h && h->opts; h++)
-			fprintf(stderr, "  %-*s %s\n", max, h->opts, h->desc);
-	}
-
-	fprintf(stderr, "\n");
-	fprintf(stderr, _("Report bugs to authors.\n"));
-	fprintf(stderr, "\n");
+	print_options(options);
+	print_report_bugs();
 
 	exit(rc);
 }
 
 static void
-sighandler(int sig __attribute__((unused)),
-           siginfo_t *si __attribute__((unused)),
-           void *uc __attribute__((unused)))
+sighandler(int sig KBD_ATTR_UNUSED, siginfo_t *si KBD_ATTR_UNUSED, void *uc KBD_ATTR_UNUSED)
 {
 	return;
 }
@@ -63,25 +42,31 @@ int main(int argc, char *argv[])
 	struct sigaction sa;
 	struct sigevent sev;
 	struct itimerspec its;
+	const char *console = NULL;
 
-	const char *const short_opts = "hV";
+	const char *const short_opts = "C:hV";
 	const struct option long_opts[] = {
-		{ "help",    no_argument, NULL, 'h' },
-		{ "version", no_argument, NULL, 'V' },
+		{ "console", required_argument, NULL, 'C' },
+		{ "help",    no_argument,       NULL, 'h' },
+		{ "version", no_argument,       NULL, 'V' },
 		{ NULL, 0, NULL, 0 }
 	};
-
-	set_progname(argv[0]);
-	setuplocale();
-
 	const struct kbd_help opthelp[] = {
-		{ "-h, --help",    _("print this usage message.") },
-		{ "-V, --version", _("print version number.")     },
+		{ "-C, --console=DEV", _("the console device to be used.") },
+		{ "-h, --help",        _("print this usage message.") },
+		{ "-V, --version",     _("print version number.")     },
 		{ NULL, NULL }
 	};
 
+	setuplocale();
+
 	while ((c = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
 		switch (c) {
+			case 'C':
+				if (optarg == NULL || optarg[0] == '\0')
+					usage(EX_USAGE, opthelp);
+				console = optarg;
+				break;
 			case 'V':
 				print_version_and_exit();
 				break;
@@ -99,7 +84,7 @@ int main(int argc, char *argv[])
 		usage(EX_USAGE, opthelp);
 	}
 
-	if ((fd = getfd(NULL)) < 0)
+	if ((fd = getfd(console)) < 0)
 		kbd_error(EXIT_FAILURE, 0, _("Couldn't get a file descriptor referring to the console."));
 
 	num = atoi(argv[optind]);

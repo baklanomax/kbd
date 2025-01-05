@@ -8,16 +8,16 @@ Here are some important resources:
 
 ## Mailing list
 
-* E-mail:  kbd@lists.altlinux.org
-* URL:     https://lists.altlinux.org/mailman/listinfo/kbd
-* Archive: https://lore.altlinux.org/kbd/
+* E-mail:  kbd@lists.linux.dev
+* URL:     https://subspace.kernel.org/lists.linux.dev.html
+* Archive: https://lore.kernel.org/kbd/
 
 To protect subscribers from spam, the mailing list requires a subscription.
 
 
 ## Bug reporting
 
-* E-mail: kbd@lists.altlinux.org
+* E-mail: kbd@lists.linux.dev
 * Web:    https://github.com/legionus/kbd/issues
 
 Report problems with this package to the mailing list or
@@ -52,7 +52,7 @@ To summarize, the stable release is `2.1.0` while `2.0.9x` is a pre-releases.
 
 Git repository:
 * Primary: git://git.kernel.org/pub/scm/linux/kernel/git/legion/kbd.git
-* Mirror:  git://github.com/legionus/kbd.git
+* Mirror:  https://github.com/legionus/kbd.git
 
 Git Branches: `git branch -a`
 

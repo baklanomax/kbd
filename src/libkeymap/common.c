@@ -5,8 +5,6 @@
 #include <stdarg.h>
 
 #include "keymap.h"
-
-#include "libcommon.h"
 #include "contextP.h"
 
 void
@@ -22,18 +20,12 @@ lk_log(struct lk_ctx *ctx, int priority,
 	va_end(args);
 }
 
-#ifndef DEBUG
-#define log_unused __attribute__((unused))
-#else
-#define log_unused
-#endif
-
-static void __attribute__((format(printf, 6, 0)))
+static void KBD_ATTR_PRINTF(6, 0)
 log_file(void *data,
-         int priority log_unused,
-         const char *file log_unused,
-         const int line log_unused,
-         const char *fn log_unused,
+         int priority KBD_ATTR_UNUSED,
+         const char *file KBD_ATTR_UNUSED,
+         const int line KBD_ATTR_UNUSED,
+         const char *fn KBD_ATTR_UNUSED,
          const char *format, va_list args)
 {
 	FILE *fp = data;
@@ -76,8 +68,6 @@ log_file(void *data,
 	fprintf(fp, "\n");
 }
 
-#undef log_unused
-
 int lk_set_log_fn(struct lk_ctx *ctx, lk_logger_t log_fn, const void *data)
 {
 	if (!ctx)
@@ -87,6 +77,22 @@ int lk_set_log_fn(struct lk_ctx *ctx, lk_logger_t log_fn, const void *data)
 	ctx->log_data = (void *)data;
 
 	return 0;
+}
+
+lk_logger_t lk_get_log_fn(struct lk_ctx *ctx)
+{
+	if (!ctx)
+		return NULL;
+
+	return ctx->log_fn;
+}
+
+void *lk_get_log_data(struct lk_ctx *ctx)
+{
+	if (!ctx)
+		return NULL;
+
+	return ctx->log_data;
 }
 
 int lk_get_log_priority(struct lk_ctx *ctx)
@@ -121,6 +127,23 @@ int lk_set_parser_flags(struct lk_ctx *ctx, lk_flags flags)
 		return -1;
 
 	ctx->flags = flags;
+	return 0;
+}
+
+lk_keywords lk_get_keywords(struct lk_ctx *ctx)
+{
+	if (!ctx)
+		return -1;
+
+	return ctx->keywords;
+}
+
+int lk_set_keywords(struct lk_ctx *ctx, lk_keywords keywords)
+{
+	if (!ctx)
+		return -1;
+
+	ctx->keywords = keywords;
 	return 0;
 }
 

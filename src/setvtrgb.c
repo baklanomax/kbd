@@ -17,7 +17,7 @@ static unsigned char cmap[3 * 16];
 /* Standard VGA terminal colors, matching those hardcoded in the Linux kernel's
  * drivers/char/vt.c
  */
-unsigned char vga_colors[] = {
+static unsigned char vga_colors[] = {
 	0x00, 0x00, 0x00,
 	0xaa, 0x00, 0x00,
 	0x00, 0xaa, 0x00,
@@ -36,12 +36,10 @@ unsigned char vga_colors[] = {
 	0xff, 0xff, 0xff,
 };
 
-static void __attribute__((noreturn))
+static void KBD_ATTR_NORETURN
 usage(int rc, const struct kbd_help *options)
 {
-	const struct kbd_help *h;
-
-	fprintf(stderr, _("Usage: %s [option...] [vga|FILE|-]\n"), get_progname());
+	fprintf(stderr, _("Usage: %s [option...] [vga|FILE|-]\n"), program_invocation_short_name);
 	fprintf(stderr, "\n");
 	fprintf(stderr, _(
 				"If you use the FILE parameter, it can be either in decimal\n"
@@ -61,27 +59,8 @@ usage(int rc, const struct kbd_help *options)
 				"And so on, for all the 16 colors.\n"
 			 ));
 
-	if (options) {
-		int max = 0;
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, _("Options:"));
-		fprintf(stderr, "\n");
-
-		for (h = options; h && h->opts; h++) {
-			int len = (int) strlen(h->opts);
-			if (max < len)
-				max = len;
-		}
-		max += 2;
-
-		for (h = options; h && h->opts; h++)
-			fprintf(stderr, "  %-*s %s\n", max, h->opts, h->desc);
-	}
-
-	fprintf(stderr, "\n");
-	fprintf(stderr, _("Report bugs to authors.\n"));
-	fprintf(stderr, "\n");
+	print_options(options);
+	print_report_bugs();
 
 	exit(rc);
 }
@@ -165,7 +144,6 @@ int main(int argc, char **argv)
 	FILE *f;
 	const char *console = NULL;
 
-	set_progname(argv[0]);
 	setuplocale();
 
 	const char *short_opts = "C:hV";

@@ -11,8 +11,9 @@
 #include <sys/ioctl.h>
 #include <linux/kd.h>
 
+#include <kfont.h>
+
 #include "libcommon.h"
-#include "kfont.h"
 
 #ifndef USE_LIBC
 /* There is such function in libc5 but it doesn't work for me [libc 5.4.13] */
@@ -28,32 +29,13 @@ ud_compar(const void *u1, const void *u2)
 	return (int)fp1 - (int)fp2;
 }
 
-static void __attribute__((noreturn))
+static void KBD_ATTR_NORETURN
 usage(int rc, const struct kbd_help *options)
 {
-	const struct kbd_help *h;
-	fprintf(stderr, _("Usage: %s [option...]\n"), get_progname());
-	if (options) {
-		int max = 0;
+	fprintf(stderr, _("Usage: %s [option...]\n"), program_invocation_short_name);
 
-		fprintf(stderr, "\n");
-		fprintf(stderr, _("Options:"));
-		fprintf(stderr, "\n");
-
-		for (h = options; h && h->opts; h++) {
-			int len = (int) strlen(h->opts);
-			if (max < len)
-				max = len;
-		}
-		max += 2;
-
-		for (h = options; h && h->opts; h++)
-			fprintf(stderr, "  %-*s %s\n", max, h->opts, h->desc);
-	}
-
-	fprintf(stderr, "\n");
-	fprintf(stderr, _("Report bugs to authors.\n"));
-	fprintf(stderr, "\n");
+	print_options(options);
+	print_report_bugs();
 
 	exit(rc);
 }
@@ -67,7 +49,6 @@ int main(int argc, char **argv)
 	char *console = NULL;
 	struct unimapdesc ud;
 
-	set_progname(argv[0]);
 	setuplocale();
 
 	const char *const short_opts = "hVsC:";
@@ -115,7 +96,7 @@ int main(int argc, char **argv)
 	int ret;
 	struct kfont_context *kfont;
 
-	if ((ret = kfont_init(get_progname(), &kfont)) < 0)
+	if ((ret = kfont_init(program_invocation_short_name, &kfont)) < 0)
 		return -ret;
 
 	if (kfont_get_unicodemap(kfont, fd, &ud))

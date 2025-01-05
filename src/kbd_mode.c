@@ -19,35 +19,15 @@
 
 #include "libcommon.h"
 
-static void __attribute__((noreturn))
+static void KBD_ATTR_NORETURN
 usage(int rc, const struct kbd_help *options)
 {
-	const struct kbd_help *h;
-	fprintf(stderr, _("Usage: %s [option...]\n"), get_progname());
+	fprintf(stderr, _("Usage: %s [option...]\n"), program_invocation_short_name);
 	fprintf(stderr, "\n");
 	fprintf(stderr, _("This utility reports or sets the keyboard mode.\n"));
 
-	if (options) {
-		int max = 0;
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, _("Options:"));
-		fprintf(stderr, "\n");
-
-		for (h = options; h && h->opts; h++) {
-			int len = (int) strlen(h->opts);
-			if (max < len)
-				max = len;
-		}
-		max += 2;
-
-		for (h = options; h && h->opts; h++)
-			fprintf(stderr, "  %-*s %s\n", max, h->opts, h->desc);
-	}
-
-	fprintf(stderr, "\n");
-	fprintf(stderr, _("Report bugs to authors.\n"));
-	fprintf(stderr, "\n");
+	print_options(options);
+	print_report_bugs();
 
 	exit(rc);
 }
@@ -79,7 +59,6 @@ int main(int argc, char *argv[])
 	int fd, mode, orig_mode, c, n = 0, force = 0;
 	char *console = NULL;
 
-	set_progname(argv[0]);
 	setuplocale();
 
 	const char *short_opts = "auskfC:hV";

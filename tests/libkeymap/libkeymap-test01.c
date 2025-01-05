@@ -7,10 +7,8 @@
 #include "libcommon.h"
 
 int
-main(int __attribute__((unused)) argc, char **argv)
+main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 {
-	set_progname(argv[0]);
-
 	const char *s;
 	FILE *f = NULL;
 	struct kbdfile *fp = NULL;
@@ -30,9 +28,9 @@ main(int __attribute__((unused)) argc, char **argv)
 
 	kbdfile_set_pathname(fp, "charset-keymap0.map");
 
-	f = fopen(DATADIR "/data/libkeymap/charset-keymap0.map", "r");
+	f = fopen(TESTDIR "/data/libkeymap/charset-keymap0.map", "r");
 	if (!f)
-		kbd_error(EXIT_FAILURE, 0, "Unable to open: " DATADIR "/data/libkeymap/charset-keymap0.map: %s", strerror(errno));
+		kbd_error(EXIT_FAILURE, 0, "Unable to open: " TESTDIR "/data/libkeymap/charset-keymap0.map: %s", strerror(errno));
 
 	kbdfile_set_file(fp, f);
 

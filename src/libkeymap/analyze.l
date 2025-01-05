@@ -6,10 +6,8 @@
 
 #include <kbdfile.h>
 
-#include "libcommon.h"
 #include "contextP.h"
 #include "ksyms.h"
-#include "paths.h"
 
 #include "parser.h"
 %}
@@ -177,7 +175,7 @@ find_standard_incl_file(struct lk_ctx *ctx, char *s, struct kbdfile *fp)
 	i--;
 	pathname = kbdfile_get_pathname(ctx->stack[i]);
 
-	if (kbdfile_find(s, include_dirpath1, include_suffixes, fp)) {
+	if ((rc = kbdfile_find(s, include_dirpath1, include_suffixes, fp))) {
 		if ((rc = find_incl_file_near_fn(ctx, s, pathname, fp)) == -1)
 			return rc;
 	}
@@ -471,11 +469,7 @@ To                      to|To|TO
 				i = strtol(yytext + 1, NULL, 8);
 
 				if (i == LONG_MIN || i == LONG_MAX) {
-					char buf[200];
-
-					strerror_r(errno, buf, sizeof(buf));
-
-					ERR(yyextra, "%s", buf);
+					ERR(yyextra, "resulting octal value is out of range: %s", yytext + 1);
 					return(ERROR);
 				}
 

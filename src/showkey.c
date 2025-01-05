@@ -16,11 +16,9 @@
 
 #include "libcommon.h"
 
-int tmp; /* for debugging */
-
-int fd;
-int oldkbmode;
-struct termios old;
+static int fd;
+static int oldkbmode;
+static struct termios old;
 
 /*
  * version 0.81 of showkey would restore kbmode unconditially to XLATE,
@@ -70,7 +68,7 @@ clean_up(void)
 	close(fd);
 }
 
-static void __attribute__((noreturn))
+static void KBD_ATTR_NORETURN
 die(int x)
 {
 	printf(_("caught signal %d, cleaning up...\n"), x);
@@ -78,39 +76,20 @@ die(int x)
 	exit(EXIT_FAILURE);
 }
 
-static void __attribute__((noreturn))
-watch_dog(int x __attribute__((unused)))
+static void KBD_ATTR_NORETURN
+watch_dog(int x KBD_ATTR_UNUSED)
 {
 	clean_up();
 	exit(EXIT_SUCCESS);
 }
 
-static void __attribute__((noreturn))
+static void KBD_ATTR_NORETURN
 usage(int rc, const struct kbd_help *options)
 {
-	const struct kbd_help *h;
-	fprintf(stderr, _("Usage: %s [option...]\n"), get_progname());
-	if (options) {
-		int max = 0;
+	fprintf(stderr, _("Usage: %s [option...]\n"), program_invocation_short_name);
 
-		fprintf(stderr, "\n");
-		fprintf(stderr, _("Options:"));
-		fprintf(stderr, "\n");
-
-		for (h = options; h && h->opts; h++) {
-			int len = (int) strlen(h->opts);
-			if (max < len)
-				max = len;
-		}
-		max += 2;
-
-		for (h = options; h && h->opts; h++)
-			fprintf(stderr, "  %-*s %s\n", max, h->opts, h->desc);
-	}
-
-	fprintf(stderr, "\n");
-	fprintf(stderr, _("Report bugs to authors.\n"));
-	fprintf(stderr, "\n");
+	print_options(options);
+	print_report_bugs();
 
 	exit(rc);
 }
@@ -139,7 +118,6 @@ int main(int argc, char *argv[])
 	int i;
 	ssize_t n;
 
-	set_progname(argv[0]);
 	setuplocale();
 
 	const struct kbd_help opthelp[] = {
@@ -282,7 +260,7 @@ int main(int argc, char *argv[])
 			"or after pressing the key with keycode %d)...\n"), timeout, quit_keycode);
 
 	while (1) {
-		alarm(timeout);
+		alarm((unsigned int) timeout);
 		n = read(fd, buf, sizeof(buf));
 
 		/* show scancodes */

@@ -15,12 +15,21 @@ ACLOCAL_AMFLAGS = -I m4
 
 EXTRA_DIST = \
 	CREDITS \
-	contrib docs rc
+	contrib docs
 
 SUBDIRS = src data po docs
 if BUILD_TESTS
 SUBDIRS += tests
 endif
+
+.PHONY: compile_commands.json
+compile_commands.json:
+	@make -C src $(MAKEFLAGS) REAL_CC="$(CC)" CC=$(CURDIR)/contrib/gen_compile_commands
+	@EXPORT_COMPILE_COMMANDS=1 $(CURDIR)/contrib/gen_compile_commands
+	@rm -f -- .lsp.data
+
+clean-local:
+	rm -rf -- .lsp.data compile_commands.json
 
 kbd-$(VERSION).tar.xz:
 	make distcheck

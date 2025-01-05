@@ -19,12 +19,10 @@
 
 #include "libcommon.h"
 
-static void __attribute__((noreturn))
+static void KBD_ATTR_NORETURN
 usage(int rc, const struct kbd_help *options)
 {
-	const struct kbd_help *h;
-
-	fprintf(stderr, _("Usage: %s [option...] [argument]\n"), get_progname());
+	fprintf(stderr, _("Usage: %s [option...] [argument]\n"), program_invocation_short_name);
 	fprintf(stderr, "\n");
 	fprintf(stderr, _(
 				"Arguments:\n"
@@ -34,27 +32,8 @@ usage(int rc, const struct kbd_help *options)
 				"              the keysym.\n"
 			 ));
 
-	if (options) {
-		int max = 0;
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, _("Options:"));
-		fprintf(stderr, "\n");
-
-		for (h = options; h && h->opts; h++) {
-			int len = (int) strlen(h->opts);
-			if (max < len)
-				max = len;
-		}
-		max += 2;
-
-		for (h = options; h && h->opts; h++)
-			fprintf(stderr, "  %-*s %s\n", max, h->opts, h->desc);
-	}
-
-	fprintf(stderr, "\n");
-	fprintf(stderr, _("Report bugs to authors.\n"));
-	fprintf(stderr, "\n");
+	print_options(options);
+	print_report_bugs();
 
 	exit(rc);
 }
@@ -77,7 +56,7 @@ report(unsigned int meta)
 	printf("%s\n", s);
 }
 
-struct meta {
+static struct meta {
 	const char *name;
 	unsigned int val;
 } metas[] = {
@@ -99,7 +78,6 @@ int main(int argc, char **argv)
 	int fd = 0;
 	char *console = NULL;
 
-	set_progname(argv[0]);
 	setuplocale();
 
 	const char *short_opts = "C:hV";
@@ -148,12 +126,12 @@ int main(int argc, char **argv)
 
 	nmeta = 0; /* make gcc happy */
 	for (mp = metas; (unsigned)(mp - metas) < SIZE(metas); mp++) {
-		if (!strcmp(argv[1], mp->name)) {
+		if (!strcmp(argv[optind], mp->name)) {
 			nmeta = mp->val;
 			goto end;
 		}
 	}
-	fprintf(stderr, _("Unrecognized argument: %s"), argv[1]);
+	fprintf(stderr, _("Unrecognized argument: %s"), argv[optind]);
 	fprintf(stderr, "\n\n");
 	usage(EXIT_FAILURE, opthelp);
 

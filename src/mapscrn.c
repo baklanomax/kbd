@@ -15,36 +15,18 @@
 #include <sys/ioctl.h>
 #include <linux/kd.h>
 
-#include "libcommon.h"
-#include "kfont.h"
+#include <kfont.h>
 
-static void __attribute__((noreturn))
+#include "libcommon.h"
+
+static void KBD_ATTR_NORETURN
 usage(int rc, const struct kbd_help *options)
 {
-	const struct kbd_help *h;
-	fprintf(stderr, _("Usage: %s [option...] [map-file]\n"), get_progname());
+	fprintf(stderr, _("Usage: %s [option...] [map-file]\n"),
+			program_invocation_short_name);
 
-	if (options) {
-		int max = 0;
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, _("Options:"));
-		fprintf(stderr, "\n");
-
-		for (h = options; h && h->opts; h++) {
-			int len = (int) strlen(h->opts);
-			if (max < len)
-				max = len;
-		}
-		max += 2;
-
-		for (h = options; h && h->opts; h++)
-			fprintf(stderr, "  %-*s %s\n", max, h->opts, h->desc);
-	}
-
-	fprintf(stderr, "\n");
-	fprintf(stderr, _("Report bugs to authors.\n"));
-	fprintf(stderr, "\n");
+	print_options(options);
+	print_report_bugs();
 
 	exit(rc);
 }
@@ -56,7 +38,6 @@ int main(int argc, char *argv[])
 	char *outfnam = NULL;
 	struct kfont_context *kfont;
 
-	set_progname(argv[0]);
 	setuplocale();
 
 	const char *short_opts = "o:C:hV";
@@ -77,7 +58,7 @@ int main(int argc, char *argv[])
 		{ NULL, NULL }
 	};
 
-	if ((ret = kfont_init(get_progname(), &kfont)) < 0)
+	if ((ret = kfont_init(program_invocation_short_name, &kfont)) < 0)
 		return -ret;
 
 	while ((c = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {

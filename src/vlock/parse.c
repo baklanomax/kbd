@@ -45,7 +45,7 @@ locked_name(void)
 	return o_lock_all ? "console" : (is_vt ? "VC" : "tty");
 }
 
-static void __attribute__((__noreturn__))
+static void KBD_ATTR_NORETURN
 show_usage(void)
 {
 	fprintf(stderr,
@@ -54,10 +54,9 @@ show_usage(void)
 	exit(EX_USAGE);
 }
 
-static void __attribute__((__noreturn__))
+static void KBD_ATTR_NORETURN
 show_help(void)
 {
-	const char *progname = get_progname();
 	printf(_("%s: locks virtual consoles, saving your current session.\n"
 	         "Usage: %s [options]\n"
 	         "       Where [options] are any of:\n"
@@ -67,22 +66,22 @@ show_help(void)
 	         "       from switching virtual consoles.\n"
 	         "-v or --version: Print the version number of vlock and exit.\n"
 	         "-h or --help: Print this help message and exit.\n"),
-	       progname, progname);
+	       program_invocation_short_name, program_invocation_short_name);
 	exit(0);
 }
 
 void parse(int ac, char *const av[])
 {
 	static struct option long_options[] = {
-		{ "current", 0, 0, 'c' },
-		{ "all", 0, 0, 'a' },
-		{ "version", 0, 0, 'v' },
-		{ "help", 0, 0, 'h' },
-		{ 0, 0, 0, 0 },
+		{ "current", 0, NULL, 'c' },
+		{ "all", 0, NULL, 'a' },
+		{ "version", 0, NULL, 'v' },
+		{ "help", 0, NULL, 'h' },
+		{ NULL, 0, NULL, 0 },
 	};
 	int c;
 
-	while ((c = getopt_long(ac, av, "acvh", long_options, 0)) != -1) {
+	while ((c = getopt_long(ac, av, "acvh", long_options, NULL)) != -1) {
 		switch (c) {
 			case 'c':
 				o_lock_all = 0;

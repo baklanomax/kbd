@@ -17,37 +17,19 @@
 #include <string.h>
 #include <errno.h>
 #include <sysexits.h>
-#include "ksyms.h"
-#include "modifiers.h"
+
+#include <keymap.h>
 
 #include "libcommon.h"
 
 static int fd;
 
-static void __attribute__((noreturn))
+static void KBD_ATTR_NORETURN
 usage(int rc, const struct kbd_help *options)
 {
-	const struct kbd_help *h;
+	fprintf(stderr, _("Usage: %s [option...]\n"), program_invocation_short_name);
 
-	fprintf(stderr, _("Usage: %s [option...]\n"), get_progname());
-
-	if (options) {
-		int max = 0;
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, _("Options:"));
-		fprintf(stderr, "\n");
-
-		for (h = options; h && h->opts; h++) {
-			int len = (int) strlen(h->opts);
-			if (max < len)
-				max = len;
-		}
-		max += 2;
-
-		for (h = options; h && h->opts; h++)
-			fprintf(stderr, "  %-*s %s\n", max, h->opts, h->desc);
-	}
+	print_options(options);
 
 	fprintf(stderr, "\n");
 	fprintf(stderr, _("Available charsets: "));
@@ -60,9 +42,8 @@ usage(int rc, const struct kbd_help *options)
 	                  "  8  - one line for each (modifier,keycode) pair;\n"
 	                  "  16 - one line for each keycode until 1st hole.\n"
 	                 ));
-	fprintf(stderr, "\n");
-	fprintf(stderr, _("Report bugs to authors.\n"));
-	fprintf(stderr, "\n");
+
+	print_report_bugs();
 
 	exit(rc);
 }
@@ -83,7 +64,6 @@ int main(int argc, char *argv[])
 
 	struct lk_ctx *ctx;
 
-	set_progname(argv[0]);
 	setuplocale();
 
 	const char *short_opts = "hilvsnf1tkdS:c:C:V";
@@ -205,7 +185,7 @@ int main(int argc, char *argv[])
 
 		if (long_info) {
 			printf(_("Symbols recognized by %s:\n(numeric value, symbol)\n\n"),
-			       get_progname());
+					program_invocation_short_name);
 			lk_dump_symbols(ctx, stdout);
 		}
 		exit(EXIT_SUCCESS);

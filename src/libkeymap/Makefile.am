@@ -1,32 +1,25 @@
-AM_CPPFLAGS = \
-	$(CODE_COVERAGE_CPPFLAGS) \
-	-I$(srcdir) -I$(builddir) -I$(srcdir)/.. -I$(builddir)/.. \
-	-I$(srcdir)/../libcommon -I$(builddir)/../libcommon \
-	-I$(srcdir)/../libkbdfile -I$(builddir)/../libkbdfile \
-	-DDATADIR=\"$(datadir)\" -DLOCALEDIR=\"$(localedir)\" \
-	-U_GNU_SOURCE \
-	-funit-at-a-time
-
-AM_CFLAGS = $(CODE_COVERAGE_CFLAGS)
-LDADD     = $(CODE_COVERAGE_LIBS)
+include $(top_srcdir)/Makefile.common
 
 CLEANFILES = libkeymap.pc
-EXTRA_DIST = libkeymap.pc.in
+EXTRA_DIST = libkeymap.pc.gen
 
 LK_CURRENT  = 1
 LK_REVISION = 0
 LK_AGE      = 0
 
 headers = \
-	keymap.h \
-	keymap/array.h \
-	keymap/context.h \
-	keymap/charset.h \
-	keymap/common.h \
-	keymap/dump.h \
-	keymap/kernel.h \
-	keymap/kmap.h \
-	keymap/logging.h
+	../include/kbd/compiler_attributes.h \
+	../include/keymap.h \
+	../include/kbd/keymap/array.h \
+	../include/kbd/keymap/context.h \
+	../include/kbd/keymap/charset.h \
+	../include/kbd/keymap/common.h \
+	../include/kbd/keymap/dump.h \
+	../include/kbd/keymap/kernel.h \
+	../include/kbd/keymap/kmap.h \
+	../include/kbd/keymap/logging.h
+
+AM_CPPFLAGS += -I$(srcdir)
 
 SYMS = \
   syms.latin1.h/8859-1/160 \
@@ -59,8 +52,8 @@ libkeymap_la_SOURCES = \
 	contextP.h \
 	parser.y parser.h analyze.l analyze.h \
 	modifiers.c modifiers.h \
-	ksyms.c ksyms.h $(ksyms_headers) \
-	$(srcdir)/../paths.h
+	ksyms.c ksyms.h \
+	$(ksyms_headers)
 
 libkeymap_la_LIBADD = $(builddir)/../libkbdfile/libkbdfile.la
 
@@ -97,14 +90,3 @@ analyze.h: analyze.c ; @true
 
 syms.%.h:
 	$(V_GEN_SYMS)$(GEN_SYMS) -n $*_syms -s $(call charset_start,$*) <$(call charset_trans,$*) >$(builddir)/$@
-
-%.pc: %.pc.in Makefile
-	$(SED) \
-	    -e 's,[@]VERSION[@],$(VERSION),g' \
-	    -e 's,[@]prefix[@],$(prefix),g' \
-	    -e 's,[@]exec_prefix[@],$(exec_prefix),g' \
-	    -e 's,[@]libdir[@],$(libdir),g' \
-	    -e 's,[@]includedir[@],$(includedir),g' \
-	    <$< >$(builddir)/$@
-	touch -r $< $(builddir)/$@
-	chmod 644 $(builddir)/$@

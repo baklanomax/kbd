@@ -15,7 +15,6 @@
 #include <limits.h>
 #include <errno.h>
 
-#include "libcommon.h"
 #include "kfontP.h"
 
 static int
@@ -82,7 +81,7 @@ getunicode(struct kfont_context *ctx, char **p0, unicode *res)
 		return -1;
 	*p0 = p + 6;
 
-	return str_to_unicode(ctx, p + 2, 0, 16, res);
+	return str_to_unicode(ctx, p + 2, NULL, 16, res);
 }
 
 static int

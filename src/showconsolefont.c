@@ -12,8 +12,9 @@
 #include <sysexits.h>
 #include <sys/ioctl.h>
 
+#include <kfont.h>
+
 #include "libcommon.h"
-#include "kfont.h"
 
 /*
  * Showing the font is nontrivial mostly because testing whether
@@ -22,13 +23,13 @@
  * whether we are in utf8 mode.
  */
 
-unsigned short obuf[E_TABSZ], nbuf[E_TABSZ];
-struct unimapdesc ounimap, nunimap;
-int fd           = 0;
-int have_obuf    = 0;
-int have_ounimap = 0;
+static unsigned short obuf[E_TABSZ], nbuf[E_TABSZ];
+static struct unimapdesc ounimap, nunimap;
+static int fd           = 0;
+static int have_obuf    = 0;
+static int have_ounimap = 0;
 
-static void __attribute__((noreturn))
+static void KBD_ATTR_NORETURN
 leave(struct kfont_context *ctx, int n)
 {
 	if (have_obuf && kfont_put_uniscrnmap(ctx, fd, obuf)) {
@@ -95,35 +96,14 @@ setnewunicodemap(struct kfont_context *ctx, unsigned int *list, int cnt)
 		leave(ctx, EXIT_FAILURE);
 }
 
-static void __attribute__((noreturn))
+static void KBD_ATTR_NORETURN
 usage(int rc, const struct kbd_help *options)
 {
-	const struct kbd_help *h;
-
-	fprintf(stderr, _("Usage: %s [option...]\n"), get_progname());
+	fprintf(stderr, _("Usage: %s [option...]\n"), program_invocation_short_name);
 	fprintf(stderr, _("(probably after loading a font with `setfont font')\n"));
 
-	if (options) {
-		int max = 0;
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, _("Options:"));
-		fprintf(stderr, "\n");
-
-		for (h = options; h && h->opts; h++) {
-			int len = (int) strlen(h->opts);
-			if (max < len)
-				max = len;
-		}
-		max += 2;
-
-		for (h = options; h && h->opts; h++)
-			fprintf(stderr, "  %-*s %s\n", max, h->opts, h->desc);
-	}
-
-	fprintf(stderr, "\n");
-	fprintf(stderr, _("Report bugs to authors.\n"));
-	fprintf(stderr, "\n");
+	print_options(options);
+	print_report_bugs();
 
 	exit(rc);
 }
@@ -138,7 +118,6 @@ int main(int argc, char **argv)
 	unsigned int list[64];
 	int lth, info = 0;
 
-	set_progname(argv[0]);
 	setuplocale();
 
 	const char *const short_opts = "C:ivVh";
@@ -161,7 +140,7 @@ int main(int argc, char **argv)
 
 	struct kfont_context *kfont;
 
-	if ((ret = kfont_init(get_progname(), &kfont)) < 0)
+	if ((ret = kfont_init(program_invocation_short_name, &kfont)) < 0)
 		return -ret;
 
 	while ((c = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {

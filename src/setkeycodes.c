@@ -20,37 +20,16 @@
 
 #include "libcommon.h"
 
-static void __attribute__((noreturn))
+static void KBD_ATTR_NORETURN
 usage(int rc, const struct kbd_help *options)
 {
-	const struct kbd_help *h;
-
-	fprintf(stderr, _("Usage: %s [option...] scancode keycode ...\n"), get_progname());
+	fprintf(stderr, _("Usage: %s [option...] scancode keycode ...\n"), program_invocation_short_name);
 	fprintf(stderr, "\n");
 	fprintf(stderr, _("(where scancode is either xx or e0xx, given in hexadecimal,\n"
 	                  "and keycode is given in decimal)\n"));
 
-	if (options) {
-		int max = 0;
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, _("Options:"));
-		fprintf(stderr, "\n");
-
-		for (h = options; h && h->opts; h++) {
-			int len = (int) strlen(h->opts);
-			if (max < len)
-				max = len;
-		}
-		max += 2;
-
-		for (h = options; h && h->opts; h++)
-			fprintf(stderr, "  %-*s %s\n", max, h->opts, h->desc);
-	}
-
-	fprintf(stderr, "\n");
-	fprintf(stderr, _("Report bugs to authors.\n"));
-	fprintf(stderr, "\n");
+	print_options(options);
+	print_report_bugs();
 
 	exit(rc);
 }
@@ -94,7 +73,6 @@ int main(int argc, char **argv)
 	struct kbkeycode a;
 	char *console = NULL;
 
-	set_progname(argv[0]);
 	setuplocale();
 
 	const char *short_opts = "C:hV";
@@ -138,11 +116,14 @@ int main(int argc, char **argv)
 	if ((fd = getfd(console)) < 0)
 		kbd_error(EX_OSERR, 0, _("Couldn't get a file descriptor referring to the console."));
 
-	while (argc > 2) {
-		if (str_to_uint(argv[1], 16, &a.scancode) < 0)
+	for (int i = optind; i < argc; i += 2) {
+		if ((i + 1) == argc)
+			kbd_error(EX_DATAERR, 0, _("Not enough arguments."));
+
+		if (str_to_uint(argv[i], 16, &a.scancode) < 0)
 			return EX_DATAERR;
 
-		if (str_to_uint(argv[2], 0, &a.keycode) < 0)
+		if (str_to_uint(argv[i + 1], 0, &a.keycode) < 0)
 			return EX_DATAERR;
 
 		if (a.scancode >= 0xe000) {
@@ -164,8 +145,6 @@ int main(int argc, char **argv)
 			          _("failed to set scancode %x to keycode %d: ioctl KDSETKEYCODE"),
 			          a.scancode, a.keycode);
 		}
-		argc -= 2;
-		argv += 2;
 	}
 	return EX_OK;
 }

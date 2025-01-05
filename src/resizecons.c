@@ -84,14 +84,12 @@
 
 #include <kbdfile.h>
 
-#include "paths.h"
-
 #include "libcommon.h"
 
 #define MODE_RESTORETEXTMODE 0
 #define MODE_VGALINES 1
 
-static void usage(void);
+static void usage(void) KBD_ATTR_NORETURN;
 
 /* VGA textmode register tweaking. */
 static void vga_init_io(void);
@@ -102,12 +100,12 @@ static int vga_get_fontheight(void);
 static void vga_set_cursor(int, int);
 static void vga_set_verticaldisplayend_lowbyte(int);
 
-const char *const dirpath[]  = {
+static const char *const dirpath[]  = {
 	"",
 	DATADIR "/" VIDEOMODEDIR "/",
 	NULL
 };
-char const *const suffixes[] = {
+static char const *const suffixes[] = {
 	"",
 	NULL
 };
@@ -123,7 +121,6 @@ int main(int argc, char **argv)
 	const char *defaultfont;
 	struct kbdfile *fp;
 
-	set_progname(argv[0]);
 	setuplocale();
 
 	if (argc < 2)
@@ -138,7 +135,7 @@ int main(int argc, char **argv)
 	if (argc == 3 && strcmp(argv[1], "-lines") == 0) {
 		mode = MODE_VGALINES;
 		rr   = atoi(argv[2]);
-	} else if (argc == 2 && (p = strchr(argv[1], 'x')) != 0)
+	} else if (argc == 2 && (p = strchr(argv[1], 'x')) != NULL)
 		rr = atoi(p + 1);
 	else if (argc == 3)
 		rr = atoi(argv[2]);
@@ -370,7 +367,7 @@ int main(int argc, char **argv)
 	return EXIT_SUCCESS;
 }
 
-static void __attribute__((noreturn))
+static void KBD_ATTR_NORETURN
 usage(void)
 {
 	fprintf(stderr,

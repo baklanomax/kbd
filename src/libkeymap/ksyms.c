@@ -9,7 +9,6 @@
 
 #include "contextP.h"
 #include "ksyms.h"
-#include "libcommon.h"
 
 #include "syms.cp1250.h"
 #include "syms.ethiopic.h"
@@ -36,7 +35,7 @@
 		x, sizeof(x) / sizeof(x[0]) \
 	}
 
-const syms_entry syms[] = {
+static const syms_entry syms[] = {
 	E(iso646_syms), /* KT_LATIN */
 	E(fn_syms),     /* KT_FN */
 	E(spec_syms),   /* KT_SPEC */
@@ -45,12 +44,12 @@ const syms_entry syms[] = {
 	E(cons_syms),   /* KT_CONS */
 	E(cur_syms),    /* KT_CUR */
 	E(shift_syms),  /* KT_SHIFT */
-	{ 0, 0 },       /* KT_META */
+	{ NULL, 0 },    /* KT_META */
 	E(ascii_syms),  /* KT_ASCII */
 	E(lock_syms),   /* KT_LOCK */
-	{ 0, 0 },       /* KT_LETTER */
+	{ NULL, 0 },    /* KT_LETTER */
 	E(sticky_syms), /* KT_SLOCK */
-	{ 0, 0 },       /*  */
+	{ NULL, 0 },    /*  */
 	E(brl_syms)     /* KT_BRL */
 };
 
@@ -59,7 +58,7 @@ const syms_entry syms[] = {
 const int syms_size = sizeof(syms) / sizeof(syms_entry);
 const int syn_size  = sizeof(synonyms) / sizeof(synonyms[0]);
 
-const struct cs {
+static const struct cs {
 	const char *charset;
 	const sym *charnames;
 	const unsigned short start;
@@ -433,4 +432,19 @@ int add_capslock(struct lk_ctx *ctx, int code)
 		return K(KT_LETTER, code ^ 0xf000);
 	else
 		return convert_code(ctx, code, TO_AUTO);
+}
+
+
+int lk_convert_code(struct lk_ctx *ctx, int code, int direction)
+{
+	if (!ctx)
+		return CODE_FOR_UNKNOWN_KSYM;
+	return convert_code(ctx, code, direction);
+}
+
+int lk_add_capslock(struct lk_ctx *ctx, int code)
+{
+	if (!ctx)
+		return CODE_FOR_UNKNOWN_KSYM;
+	return add_capslock(ctx, code);
 }

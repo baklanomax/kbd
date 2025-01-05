@@ -44,36 +44,15 @@
 #error vt device name must be defined
 #endif
 
-static void __attribute__((noreturn))
+static void KBD_ATTR_NORETURN
 usage(int rc, const struct kbd_help *options)
 {
-	const struct kbd_help *h;
-
-	fprintf(stderr, _("Usage: %s [option...] -- command\n"), get_progname());
+	fprintf(stderr, _("Usage: %s [option...] -- command\n"), program_invocation_short_name);
 	fprintf(stderr, "\n");
 	fprintf(stderr, _("This utility helps you to start a program on a new virtual terminal (VT).\n"));
 
-	if (options) {
-		int max = 0;
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, _("Options:"));
-		fprintf(stderr, "\n");
-
-		for (h = options; h && h->opts; h++) {
-			int len = (int) strlen(h->opts);
-			if (max < len)
-				max = len;
-		}
-		max += 2;
-
-		for (h = options; h && h->opts; h++)
-			fprintf(stderr, "  %-*s %s\n", max, h->opts, h->desc);
-	}
-
-	fprintf(stderr, "\n");
-	fprintf(stderr, _("Report bugs to authors.\n"));
-	fprintf(stderr, "\n");
+	print_options(options);
+	print_report_bugs();
 
 	exit(rc);
 }
@@ -175,9 +154,7 @@ open_vt(char *vtname, int force)
 }
 
 static void
-sighandler(int sig __attribute__((unused)),
-           siginfo_t *si __attribute__((unused)),
-           void *uc __attribute__((unused)))
+sighandler(int sig KBD_ATTR_UNUSED, siginfo_t *si KBD_ATTR_UNUSED, void *uc KBD_ATTR_UNUSED)
 {
 	return;
 }
@@ -262,34 +239,33 @@ int main(int argc, char *argv[])
 	char vtname[PATH_MAX+1];
 	char *cmd = NULL, *def_cmd = NULL, *username = NULL;
 
-	set_progname(argv[0]);
 	setuplocale();
 
 	struct option long_options[] = {
-		{ "help", no_argument, 0, 'h' },
-		{ "version", no_argument, 0, 'V' },
-		{ "verbose", no_argument, 0, 'v' },
-		{ "exec", no_argument, 0, 'e' },
-		{ "force", no_argument, 0, 'f' },
-		{ "login", no_argument, 0, 'l' },
-		{ "user", no_argument, 0, 'u' },
-		{ "switch", no_argument, 0, 's' },
-		{ "wait", no_argument, 0, 'w' },
-		{ "console", required_argument, 0, 'c' },
-		{ 0, 0, 0, 0 }
+		{ "help", no_argument, NULL, 'h' },
+		{ "version", no_argument, NULL, 'V' },
+		{ "verbose", no_argument, NULL, 'v' },
+		{ "exec", no_argument, NULL, 'e' },
+		{ "force", no_argument, NULL, 'f' },
+		{ "login", no_argument, NULL, 'l' },
+		{ "user", no_argument, NULL, 'u' },
+		{ "switch", no_argument, NULL, 's' },
+		{ "wait", no_argument, NULL, 'w' },
+		{ "console", required_argument, NULL, 'c' },
+		{ NULL, 0, NULL, 0 }
 	};
 
 	const struct kbd_help opthelp[] = {
-		{ "-c, --console=DEV", _("the console device to be used.") },
-		{ "-e, --exec",        _("execute the command, without forking.") },
-		{ "-f, --force",       _("force opening a VT without checking.") },
-		{ "-l, --login",       _("make the command a login shell.") },
-		{ "-u, --user",        _("figure out the owner of the current VT.") },
-		{ "-s, --switch",      _("switch to the new VT.") },
-		{ "-w, --wait",        _("wait for command to complete") },
-		{ "-v, --verbose",     _("be more verbose.") },
-		{ "-V, --version",     _("print version number.")     },
-		{ "-h, --help",        _("print this usage message.") },
+		{ "-c, --console=VTNUMBER", _("use the given VT number and not the first available.") },
+		{ "-e, --exec",             _("execute the command, without forking.") },
+		{ "-f, --force",            _("force opening a VT without checking.") },
+		{ "-l, --login",            _("make the command a login shell.") },
+		{ "-u, --user",             _("figure out the owner of the current VT.") },
+		{ "-s, --switch",           _("switch to the new VT.") },
+		{ "-w, --wait",             _("wait for command to complete") },
+		{ "-v, --verbose",          _("be more verbose.") },
+		{ "-V, --version",          _("print version number.")     },
+		{ "-h, --help",             _("print this usage message.") },
 		{ NULL, NULL }
 	};
 
@@ -361,11 +337,11 @@ int main(int argc, char *argv[])
 	} else if (!force) {
 		if (vtno >= 16)
 			kbd_error(7, 0, _("Cannot check whether vt %d is free; use `%s -f' to force."),
-			          vtno, get_progname());
+			          vtno, program_invocation_short_name);
 
 		if (vtstat.v_state & (1 << vtno))
 			kbd_error(7, 0, _("vt %d is in use; command aborted; use `%s -f' to force."),
-			          vtno, get_progname());
+			          vtno, program_invocation_short_name);
 	}
 
 	if (as_user)

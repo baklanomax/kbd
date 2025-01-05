@@ -7,17 +7,16 @@
 #include "libcommon.h"
 
 int
-main(int __attribute__((unused)) argc, char **argv)
+main(int argc KBD_ATTR_UNUSED, char **argv KBD_ATTR_UNUSED)
 {
-	set_progname(argv[0]);
 	struct kbdfile *fp = kbdfile_new(NULL);
 	if (!fp)
 		kbd_error(EXIT_FAILURE, 0, "unable to create kbdfile");
 
-	const char *const dirpath[]  = { "", DATADIR "/data/findfile/test_0/keymaps/**", 0 };
+	const char *const dirpath[]  = { "", TESTDIR "/data/findfile/test_0/keymaps/**", 0 };
 	const char *const suffixes[] = { ".kmap", ".map", "", 0 };
 
-	const char *expect = DATADIR "/data/findfile/test_0/keymaps/i386/qwertz/test2.kmap";
+	const char *expect = TESTDIR "/data/findfile/test_0/keymaps/i386/qwertz/test2.kmap";
 
 	int rc = kbdfile_find("test2", dirpath, suffixes, fp);
 
