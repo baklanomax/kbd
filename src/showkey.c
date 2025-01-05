@@ -96,13 +96,14 @@ usage(int rc, const struct kbd_help *options)
 
 int main(int argc, char *argv[])
 {
-	const char *short_opts          = "haskVt:";
+	const char *short_opts          = "haskVt:q:";
 	const struct option long_opts[] = {
 		{ "help", no_argument, NULL, 'h' },
 		{ "ascii", no_argument, NULL, 'a' },
 		{ "scancodes", no_argument, NULL, 's' },
 		{ "keycodes", no_argument, NULL, 'k' },
 		{ "timeout", required_argument, NULL, 't' },
+		{ "quit-keycode", required_argument, NULL, 'q' },
 		{ "version", no_argument, NULL, 'V' },
 		{ NULL, 0, NULL, 0 }
 	};
@@ -110,6 +111,7 @@ int main(int argc, char *argv[])
 	int show_keycodes = 1;
 	int print_ascii   = 0;
 	int timeout = 10;
+	int quit_keycode = 0;
 
 	struct termios new = { 0 };
 	unsigned char buf[18]; /* divisible by 3 */
@@ -123,6 +125,7 @@ int main(int argc, char *argv[])
 		{ "-s, --scancodes", _("display only the raw scan-codes.") },
 		{ "-k, --keycodes",  _("display only the interpreted keycodes (default).") },
 		{ "-t, --timeout",   _("set timeout, default 10")     },
+		{ "-q, --quit-keycode=KEYCODE", _("set quit keycode") },
 		{ "-h, --help",      _("print this usage message.") },
 		{ "-V, --version",   _("print version number.")     },
 		{ NULL, NULL }
@@ -150,6 +153,11 @@ int main(int argc, char *argv[])
 				/*  in anycase if conversion wrong */
 				if (timeout < 1)
 					timeout = 10;
+				break;
+			case 'q':
+				quit_keycode = atoi(optarg);
+				if (quit_keycode < 0 || quit_keycode > 255 || (quit_keycode > 83 && !show_keycodes))
+					quit_keycode = 0;
 				break;
 			case '?':
 				usage(EX_USAGE, opthelp);
@@ -245,41 +253,43 @@ int main(int argc, char *argv[])
 		kbd_error(EXIT_FAILURE, errno, "ioctl KDSKBMODE");
 	}
 
-	printf(_("press any key (program terminates %ds after last keypress)...\n"), timeout);
+	if (!quit_keycode)
+		printf(_("press any key (program terminates %ds after last keypress)...\n"), timeout);
+	else
+		printf(_("press any key (program terminates %ds after last keypress\n"
+			"or after pressing the key with keycode %d)...\n"), timeout, quit_keycode);
 
-	/* show scancodes */
-	if (!show_keycodes) {
-		while (1) {
-			alarm((unsigned int) timeout);
-			n = read(fd, buf, sizeof(buf));
+	while (1) {
+		alarm((unsigned int) timeout);
+		n = read(fd, buf, sizeof(buf));
+
+		/* show scancodes */
+		if (!show_keycodes) {
 			for (i = 0; i < n; i++)
 				printf("0x%02x ", buf[i]);
 			printf("\n");
 		}
-		clean_up();
-		return EXIT_SUCCESS;
-	}
 
-	/* show keycodes - 2.6 allows 3-byte reports */
-	while (1) {
-		alarm((unsigned int) timeout);
-		n = read(fd, buf, sizeof(buf));
-		i = 0;
-		while (i < n) {
-			int kc;
-			const char *s;
-
-			s = (buf[i] & 0x80) ? _("release") : _("press");
-
-			if (i + 2 < n && (buf[i] & 0x7f) == 0 && (buf[i + 1] & 0x80) != 0 && (buf[i + 2] & 0x80) != 0) {
-				kc = ((buf[i + 1] & 0x7f) << 7) |
-				     (buf[i + 2] & 0x7f);
-				i += 3;
-			} else {
-				kc = (buf[i] & 0x7f);
-				i++;
+		/* show keycodes - 2.6 allows 3-byte reports */
+		if (show_keycodes || quit_keycode) {
+			i = 0;
+			while (i < n) {
+				int kc;
+				int is_released = (buf[i] & 0x80) ? 1 : 0;
+				if (i + 2 < n && (buf[i] & 0x7f) == 0 && (buf[i + 1] & 0x80) != 0 && (buf[i + 2] & 0x80) != 0) {
+					kc = ((buf[i + 1] & 0x7f) << 7) | (buf[i + 2] & 0x7f);
+					i += 3;
+				} else {
+					kc = (buf[i] & 0x7f);
+					i++;
+				}
+				if (show_keycodes)
+					printf(_("keycode %3d %s\n"), kc, is_released ? _("release") : _("press"));
+				if (kc == quit_keycode && is_released) {
+					clean_up();
+					return EXIT_SUCCESS;
+				}
 			}
-			printf(_("keycode %3d %s\n"), kc, s);
 		}
 	}
 
